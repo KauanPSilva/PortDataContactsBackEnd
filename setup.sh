@@ -5,19 +5,25 @@ cd "$(dirname "$0")"
 
 ACTION="${1:-setup}"
 
-if ! command -v docker >/dev/null 2>&1; then
-  echo "Docker não encontrado."
-  exit 1
-fi
+check_docker() {
+  if ! command -v docker >/dev/null 2>&1; then
+    echo "Docker não encontrado."
+    exit 1
+  fi
 
-if ! docker compose version >/dev/null 2>&1; then
-  echo "Docker Compose não encontrado."
-  exit 1
-fi
+  if ! docker compose version >/dev/null 2>&1; then
+    echo "Docker Compose não encontrado."
+    exit 1
+  fi
 
-if ! docker info >/dev/null 2>&1; then
-  echo "Docker não está em execução ou o usuário não possui permissão."
-  exit 1
+  if ! docker info >/dev/null 2>&1; then
+    echo "Docker não está em execução ou o usuário não possui permissão."
+    exit 1
+  fi
+}
+
+if [ "$ACTION" != "test" ]; then
+  check_docker
 fi
 
 case "$ACTION" in
@@ -49,6 +55,11 @@ case "$ACTION" in
     echo "Reiniciando a aplicação..."
     docker compose restart
     echo "Aplicação reiniciada!"
+    ;;
+
+    test)
+    echo "Executando os testes..."
+    npm test
     ;;
 
   *)

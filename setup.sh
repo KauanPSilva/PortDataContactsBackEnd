@@ -1,31 +1,58 @@
 #!/usr/bin/env bash
-
 set -e
 
+cd "$(dirname "$0")"
+
+ACTION="${1:-setup}"
+
 if ! command -v docker >/dev/null 2>&1; then
-    echo "Docker não encontrado. Instale o Docker antes de continuar."
-    exit 1
+  echo "Docker não encontrado."
+  exit 1
 fi
 
 if ! docker compose version >/dev/null 2>&1; then
-    echo "Docker Compose não encontrado."
-    exit 1
+  echo "Docker Compose não encontrado."
+  exit 1
 fi
 
 if ! docker info >/dev/null 2>&1; then
-    echo "O Docker não está em execução ou o usuário não possui permissão."
+  echo "Docker não está em execução ou o usuário não possui permissão."
+  exit 1
+fi
+
+case "$ACTION" in
+  setup)
+    if [ ! -f .env ]; then
+      cp .env.example .env
+      echo "Arquivo .env criado."
+    fi
+
+    echo "Construindo e iniciando a aplicação..."
+    docker compose up --build -d --wait
+
+    echo "Aplicação disponível em http://localhost:3000/contatos"
+    ;;
+
+  start)
+    echo "Iniciando a aplicação..."
+    docker compose start
+    echo "Aplicação iniciada!"
+    ;;
+
+  stop)
+    echo "Parando a aplicação..."
+    docker compose stop
+    echo "Aplicação parada!"
+    ;;
+
+  restart)
+    echo "Reiniciando a aplicação..."
+    docker compose restart
+    echo "Aplicação reiniciada!"
+    ;;
+
+  *)
+    echo "Uso: ./setup.sh {setup|start|stop|restart}"
     exit 1
-fi
-
-if [ ! -f .env ]; then
-    cp .env.example .env
-    echo "Arquivo .env criado."
-fi
-
-echo "Iniciando a aplicação..."
-
-docker compose up --build -d --wait
-
-echo ""
-echo "Aplicação iniciada!"
-echo "API disponível em http://localhost:3000/contatos"
+    ;;
+esac
